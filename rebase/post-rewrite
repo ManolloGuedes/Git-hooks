@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# File names
+last_commits=~/.last_commits
+duplicate_commits=~/.duplicate_commits
+
+# Log colors
+RED='\033[0;31m'
+NC='\033[0m' # default color
+
+# number of commits that will be analyzed to find duplicate commits
+number_of_commits_to_analyze=100
+
+# Creating files, if they don't exist
+touch "$last_commits"
+touch "$duplicate_commits"
+
+# Cleaning files
+true > "$last_commits"
+true > "$duplicate_commits"
+
+# Saving the last $number_of_commits_to_analyze commits in the file
+# The parameter --format="%s %ad" causes only the commit subject and its authorship date to be printed
+git log -n "$number_of_commits_to_analyze" --oneline --no-merges --format="%s %ad" > "$last_commits"
+
+# Save only the repeated commits in the $duplicate_commits file
+sort "$last_commits" | uniq --count --repeated > "$duplicate_commits"
+
+count=$(wc -l < "$duplicate_commits")
+
+# Check for duplicate confirmations
+if (("$count" > "0")); then
+	echo -e "${RED}The following commits, from the last $number_of_commits_to_analyze, seems to be duplicated:"
+	while read Line	
+	do
+		echo -e "${RED}$Line"
+	done < "$duplicate_commits"
+
+	echo ""
+
+	echo -e "${RED}It may be interesting to review them before proceeding."
+
+	echo -e "${NC}"
+fi
