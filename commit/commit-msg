@@ -1,0 +1,4 @@
+#!/bin/sh
+
+exec < /dev/tty
+python3 .git/hooks/commit-verify.py $1
