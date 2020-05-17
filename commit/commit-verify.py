@@ -22,7 +22,7 @@ api_url = 'rest/api/2/issue/'
 time_out = 5
 
 
-MESSAGE_REGEX='(EQ-[0-9]+|Merge)'
+MESSAGE_REGEX='(JIRA-[0-9]+|Merge)'
 
 blocked_branchs=['develop', 'master', 'release']
 
@@ -46,20 +46,25 @@ class TimeOutException(Exception):
 class JiraFieldsEnum(Enum):
 	"""
 	Used Fields ID on Jira Project
+	These codes are generated automatically when you create a Jira project. It might don't exists in your context or even use different ids
 	"""
 	DEVELOPER='customfield_14741'
 	CODE_REVIEWER='customfield_14742'
 	REVIEWER='customfield_14743'
 	JIRA_PARENT='parent'
+	KEY='key'
+	FIELDS='fields'
+	DISPLAY_NAME='displayName'
+	EMAIL_ADRESS='emailAddress'
 
 
 
 class JiraUser:
 	def __init__(self, object):
 		if object is not None:
-			self.name = object['displayName']
-			if 'emailAddress' in object.keys():
-				self.email = object['emailAddress']
+			self.name = object[JiraFieldsEnum.DISPLAY_NAME.value]
+			if JiraFieldsEnum.EMAIL_ADRESS.value in object.keys():
+				self.email = object[JiraFieldsEnum.EMAIL_ADRESS.value]
 		else: 
 			pass
 
@@ -67,15 +72,15 @@ class JiraUser:
 
 class JiraIssue:
 	def __init__(self, object):
-		fields = object['fields']
-		self.key = object['key']
+		fields = object[JiraFieldsEnum.FIELDS.value]
+		self.key = object[JiraFieldsEnum.KEY.value]
 		self.developer = JiraUser(fields[JiraFieldsEnum.DEVELOPER.value])
 		self.code_reviewer = JiraUser(fields[JiraFieldsEnum.CODE_REVIEWER.value])
 		self.reviewer = JiraUser(fields[JiraFieldsEnum.REVIEWER.value])
 
 		if JiraFieldsEnum.JIRA_PARENT.value in fields.keys():
 			parent_attr = fields[JiraFieldsEnum.JIRA_PARENT.value]
-			self.parent = build_issue_from_jira(parent_attr['key'])
+			self.parent = build_issue_from_jira(parent_attr[JiraFieldsEnum.KEY.value])
 		else:
 			self.parent = None
 
@@ -142,7 +147,7 @@ def build_issue_from_jira(key):
 
 def give_commit_decision_to_user(message):
 	choice = input(bcolors.BOLD + message + bcolors.ENDC)
-	if choice.lower() == 's':
+	if choice.lower() == 'y':
 		log('Proceeding with the commit ...', bcolors.OKBLUE)
 		return True
 	else:
@@ -181,10 +186,10 @@ def valid_commit_jira(message):
 				if issue.parent:
 					log('Warning: Committing subtasks is not recommended. Current activity has the issue {0} as parent'.format(issue.parent.key), bcolors.WARNING)
 					
-					message_decision = 'Are you sure you want to continue the commit using the code {0}? (s/n)'.format(matches[0])
+					message_decision = 'Are you sure you want to continue the commit using the code {0}? (y/n)'.format(matches[0])
 					return give_commit_decision_to_user(message_decision)
 			except:
-				message_decision = 'It will not be possible to analyze based on Jira. Do you want to continue with the commit anyway? (s/n)'
+				message_decision = 'It will not be possible to analyze based on Jira. Do you want to continue with the commit anyway? (y/n)'
 				return give_commit_decision_to_user(message_decision)
 		else:
 			return True
@@ -250,13 +255,3 @@ def main():
 signal.signal(signal.SIGALRM, alarm_handler)
 
 main()
-
-# commit_message = "EQ-2090"
-# valid_commit_message(commit_message)
-# valid_commit_jira(commit_message)
-
-# response_issue = connect_and_get_issue('EQ-2090')
-
-# issue = JiraIssue(response_issue)
-
-# print(issue)
