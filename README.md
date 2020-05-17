@@ -15,9 +15,9 @@ The commit-message hook creates an acreates a commit message analysis flow that 
 The step-by-step installation instructions of each hook are inside of its folder on README.md files.
 
 You basically needs: 
-- download both commit/commit-msg, commit/commit-verify.py, install.sh, and requirements.txt files to use commit-msg hook.
+- download both commit/src/commit-msg, commit/src/commit-verify.py, install.sh, and requirements.txt files to use commit-msg hook.
   - execute the install.sh file to install all requirentements present inside requirements.txt file
-- download rebase/post-rewrite file to use post-rewrite hook.
+- download rebase/src/post-rewrite file to use post-rewrite hook.
 - put these files inside the .git/hooks folder present in your project folder.
 - grant execution permission to both post-rewrite, commit-msg and commit-verify.py files.
 
